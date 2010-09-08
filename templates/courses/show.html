@@ -1,0 +1,32 @@
+{% extends 'main.html' %}
+{% block content %}
+<div class="box nav">
+  <h2><a href="/">Course List</a>&nbsp;&raquo;&nbsp;{{ course.title }}</h2>
+</div>
+<div class="box course-info">
+  <div class="cover"><p>{{ course.title }}</p></div>
+  <ul>
+    <li><b>language:</b>&nbsp;{{ course.language }}</li>
+    <li><b>region:</b>&nbsp;{{ course.region }}</li>
+    <li><b>content count:</b>&nbsp;{{ course.content_count }} words</li>
+    <li><b>rating:</b>&nbsp;<img alt="stars" src="/images/small_stars_detail_3.gif"/></li>
+    <li>
+      <b>summary:</b>
+      <span class="desc">{{ course.summary }}</span>
+    </li>
+    <li>
+      <a href="{% url edit_content_path course.key.id %}">edit content</a>&nbsp;|&nbsp;
+      <%= link_to 'Edit',edit_course_path(@course) %>&nbsp;|&nbsp;
+    </li>
+    <li>
+      <%= link_to 'add content',add_course_path(@course) %>&nbsp;|&nbsp;
+      <%= link_to 'import content',edit_content_course_path(@course) %>&nbsp;|&nbsp;
+    </li>
+    <li>
+      <%= link_to 'share it',share_course_path(@course),:method => :put %>&nbsp;|&nbsp;
+      <%= link_to 'ready to use',ready_course_path(@course),:method => :put %>
+    </li>
+  </ul>
+  <p class="clear">&nbsp;</p>
+</div>
+{% endblock %}

@@ -1,0 +1,8 @@
+{% extends 'main.html' %}
+{% block content %}
+<div class="box">Edit Course Content</div>
+<form action="{{ path}}" method="post">
+<p>{{ form.content }}</p>
+<p><input type="submit" value="OK"></input></p>
+</form>
+{% endblock %}
