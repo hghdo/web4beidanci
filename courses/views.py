@@ -1,4 +1,7 @@
+from xml.dom.minidom import getDOMImplementation
 from django.http import HttpResponseRedirect
+from django.http import HttpResponse
+from django.core import serializers
 from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response
 from courses.models import Course
@@ -8,21 +11,60 @@ import datetime
 import logging
 from struct import *
 from google.appengine.ext import db
+from google.appengine.ext.db import Key
 
 
 def index(request):
     return render_to_response('courses/index.html',{'courses':Course.objects.all()})
+
+def list(request):
+    impl = getDOMImplementation()
+    doc=impl.createDocument(None, "course-list", None)
+    list=Course.objects.all().fetch(10)
+    for course in list:
+        course.xml(doc)
+    #data=serializers.serialize("xml",Course.objects.all(),fields=('title','summary'))
+    data=doc.toxml('utf-8')
+    return HttpResponse(data, mimetype="text/xml")
+
+def course_file(request,course_key):
+    key=Key(encoded=course_key)
+    course=Course.get(key)
+    response = HttpResponse(mimetype='text')
+    response['Content-Disposition'] = 'attachment; filename='+course_key+'.cou'
+    response.write(course.content_blob)
+    return response
+    
 
 def show(request,course_id):
     cid=int(course_id)
     course=Course.get_by_id(cid)
     return render_to_response('courses/show.html',{'course':course})
     
+@login_required    
+def edit(request,course_id):
+    cid=int(course_id)
+    course=Course.get_by_id(cid)
+    course_form=CourseForm(instance=course)
+    return render_to_response('courses/edit.html',{'form':course_form,'course':course})
+
+@login_required    
+def update(request,course_id):
+    cid=int(course_id)
+    course=Course.get_by_id(cid)
+    course_form=CourseForm(request.POST,instance=course)
+    if course_form.is_valid():
+        course=course_form.save()
+        return HttpResponseRedirect(reverse('course_path',args=[cid]))
+    else:
+        return render_to_response('courses/edit.html',{'form':course_form})
+    
 @login_required
 def new(request):
     course_form=CourseForm()
     return render_to_response('courses/new.html',{'form':course_form})
-    
+
+@login_required    
 def create(request):
     course_form=CourseForm(request.POST)
     if course_form.is_valid():
@@ -31,11 +73,12 @@ def create(request):
     else:
         return render_to_response('courses/new.html',{'form':course_form})
     
-def current_datetime(request):
-    now = datetime.datetime.now()
-    return render_to_response('current_datetime.html',{'current_date':now})
+@login_required    
+def destroy(request,course_id):
+    return
 
 
+@login_required    
 def content(request,course_id):
     cid=int(course_id)
     course=Course.get_by_id(cid)
@@ -56,10 +99,12 @@ def content(request,course_id):
             course_header+="type:%s\n" % 'simple'
             course_header+="content_count:%s\n" % len(lines)
             course_header+="separator:10\n"
-            header_size_binary_str=pack('!h',len(course_header))
-            content_str=header_size_binary_str+course_header+text_content  
+            l=len(course_header.encode('utf-8'))
+            logging.info("aaaaaaaaaaaaaaaaaa"+str(l))
+            header_size_binary_str=pack('!h',len(course_header.encode('utf-8')))
+            content_str=header_size_binary_str+course_header.encode('utf-8')+text_content.encode('utf-8')
             course.content=text_content
-            course.content_blob=db.Blob(content_str.encode('utf-8'))
+            course.content_blob=db.Blob(content_str)
             course.content_count=len(lines)
             logging.info(course.content)
             course.put()

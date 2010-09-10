@@ -4,3 +4,4 @@
 .settings
 *.swp
 django.zip
+.google_appengine
