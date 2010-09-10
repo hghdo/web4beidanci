@@ -8,4 +8,16 @@
 </li>
 {% endfor %}
 </ul>
+
+<ul class="course-list">
+{% for course in self_course %}
+<li>
+	<a href="{% url course_path course.key.id %}">{{course.title }}</a> --  
+	{{ course.language }} -- {{ course.content_count }} words
+</li>
+{% endfor %}
+
+
+
+</ul>
 {% endblock %}

@@ -12,15 +12,23 @@ import logging
 from struct import *
 from google.appengine.ext import db
 from google.appengine.ext.db import Key
+from google.appengine.api import users
 
 
 def index(request):
-    return render_to_response('courses/index.html',{'courses':Course.objects.all()})
+#    query = db.GqlQuery("SELECT * FROM Course WHERE content_count > :1 OR creator = :2 ",
+#                    10, users.get_current_user())
+    
+    q=Course.objects.all().filter("content_count >",10)
+    self_course=Course.objects.all().filter("creator =",users.get_current_user()).fetch(10)
+    return render_to_response('courses/index.html',{'courses':q.fetch(10),'self_course':self_course})
 
 def list(request):
     impl = getDOMImplementation()
     doc=impl.createDocument(None, "course-list", None)
-    list=Course.objects.all().fetch(10)
+    q=Course.objects.all()
+    q.filter("content_count >",10)
+    list=q.fetch(10)
     for course in list:
         course.xml(doc)
     #data=serializers.serialize("xml",Course.objects.all(),fields=('title','summary'))
