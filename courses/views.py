@@ -13,15 +13,23 @@ from struct import *
 from google.appengine.ext import db
 from google.appengine.ext.db import Key
 from google.appengine.api import users
+from google.appengine.ext.db import GqlQuery
 
 
 def index(request):
 #    query = db.GqlQuery("SELECT * FROM Course WHERE content_count > :1 OR creator = :2 ",
 #                    10, users.get_current_user())
-    
-    q=Course.objects.all().filter("content_count >",10)
-    self_course=Course.objects.all().filter("creator =",users.get_current_user()).fetch(10)
-    return render_to_response('courses/index.html',{'courses':q.fetch(10),'self_course':self_course})
+    style = request.GET.get('style') or 'pop'
+    #logging('request style is=>'+style)
+    if style=='pop':
+        query = GqlQuery("SELECT * FROM Course WHERE ready = :1 ORDER BY rating",True)
+        #q=Course.objects.all().filter("content_count >",10).order('rating')
+    elif style=='rec':
+        query = GqlQuery("SELECT * FROM Course WHERE ready = :1 ORDER BY created_at DESC",True)
+        #q=Course.objects.all().filter("content_count >",10).order('-created_at')
+    else:
+        query = Course.all().filter("creator =",users.get_current_user())
+    return render_to_response('courses/index.html',{'courses':query.fetch(10),'style':style})
 
 def list(request):
     impl = getDOMImplementation()
@@ -30,7 +38,7 @@ def list(request):
     q.filter("content_count >",10)
     list=q.fetch(10)
     for course in list:
-        course.xml(doc)
+        course.xml(doc,path_prefix=request.get_host())
     #data=serializers.serialize("xml",Course.objects.all(),fields=('title','summary'))
     data=doc.toxml('utf-8')
     return HttpResponse(data, mimetype="text/xml")
@@ -114,6 +122,8 @@ def content(request,course_id):
             course.content=text_content
             course.content_blob=db.Blob(content_str)
             course.content_count=len(lines)
+            if len(lines)>10:
+                course.ready=True
             logging.info(course.content)
             course.put()
             return HttpResponseRedirect(reverse('edit_content_path',args=[cid]))

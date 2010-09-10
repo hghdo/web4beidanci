@@ -14,6 +14,7 @@ class Course(BaseModel):
     ready           = db.BooleanProperty()
     creator         = db.UserProperty(auto_current_user_add=True,required=True)
     created_at      = db.DateTimeProperty(auto_now_add=True,required=True)
+    ready           = db.BooleanProperty(default=False)
     content         = db.TextProperty()
     content_count   = db.IntegerProperty(default=0)
     content_blob    = db.BlobProperty()
@@ -26,7 +27,7 @@ class Course(BaseModel):
         region_dict=dict(courses.forms.REGIONS)
         return region_dict[self.region_code]
     
-    def xml(self,doc,path_prefix="http://172.29.1.67:8000/"):
+    def xml(self,doc,path_prefix="172.29.1.67:8000"):
         top_element = doc.documentElement
         c_tag=doc.createElement('course')       
         tag = doc.createElement('key')
@@ -50,7 +51,7 @@ class Course(BaseModel):
         tag.appendChild(text)
         c_tag.appendChild(tag)
         tag = doc.createElement('url')
-        text = doc.createTextNode(path_prefix+'courses/'+str(self.key())+'/file')
+        text = doc.createTextNode('http://'+path_prefix+'/courses/'+str(self.key())+'/file')
         tag.appendChild(text)
         c_tag.appendChild(tag)
         tag = doc.createElement('filename')

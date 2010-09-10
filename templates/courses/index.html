@@ -1,5 +1,23 @@
 {% extends 'main.html' %}
 {% block content %}
+<ul class="course-filter">
+	<li>Filter:</li>
+	{% ifequal style "pop" %}
+	<li class="selected">Most popular</li>
+	<li class=""><a href="/courses/?style=rec">Last uploaded</a></li>
+	<li class=""><a href="/courses/?style=self">Created by yourself</a></li>
+	{% endifequal  %}
+	{% ifequal style "rec" %}
+	<li class=""><a href="/courses/?style=pop">Most popular</a></li>
+	<li class="selected">Last uploaded</li>
+	<li class=""><a href="/courses/?style=self">Created by yourself</a></li>
+	{% endifequal  %}
+	{% ifequal style "self" %}
+	<li class=""><a href="/courses/?style=pop">Most popular</a></li>
+	<li class=""><a href="/courses/?style=rec">Last uploaded</a></li>
+	<li class="selected">Created by yourself</li>
+	{% endifequal  %}
+</ul>
 <ul class="course-list">
 {% for course in courses %}
 <li>
@@ -7,17 +25,5 @@
 	{{ course.language }} -- {{ course.content_count }} words
 </li>
 {% endfor %}
-</ul>
-
-<ul class="course-list">
-{% for course in self_course %}
-<li>
-	<a href="{% url course_path course.key.id %}">{{course.title }}</a> --  
-	{{ course.language }} -- {{ course.content_count }} words
-</li>
-{% endfor %}
-
-
-
 </ul>
 {% endblock %}
