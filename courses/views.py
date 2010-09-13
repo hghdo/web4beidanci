@@ -17,6 +17,7 @@ from google.appengine.ext.db import GqlQuery
 
 
 def index(request):
+    user = users.get_current_user()
 #    query = db.GqlQuery("SELECT * FROM Course WHERE content_count > :1 OR creator = :2 ",
 #                    10, users.get_current_user())
     style = request.GET.get('style') or 'pop'
@@ -29,7 +30,7 @@ def index(request):
         #q=Course.objects.all().filter("content_count >",10).order('-created_at')
     else:
         query = Course.all().filter("creator =",users.get_current_user())
-    return render_to_response('courses/index.html',{'courses':query.fetch(10),'style':style})
+    return render_to_response('courses/index.html',{'courses':query.fetch(10),'style':style,'user':user})
 
 def list(request):
     impl = getDOMImplementation()
@@ -57,14 +58,14 @@ def course_file(request,course_key):
 def show(request,course_id):
     cid=int(course_id)
     course=Course.get_by_id(cid)
-    return render_to_response('courses/show.html',{'course':course,'currentuser':users.get_current_user()})
+    return render_to_response('courses/show.html',{'course':course,'user':users.get_current_user()})
     
 @login_required    
 def edit(request,course_id):
     cid=int(course_id)
     course=Course.get_by_id(cid)
     course_form=CourseForm(instance=course)
-    return render_to_response('courses/edit.html',{'form':course_form,'course':course})
+    return render_to_response('courses/edit.html',{'form':course_form,'course':course,'user':users.get_current_user()})
 
 @login_required    
 def update(request,course_id):
@@ -75,12 +76,12 @@ def update(request,course_id):
         course=course_form.save()
         return HttpResponseRedirect(reverse('course_path',args=[cid]))
     else:
-        return render_to_response('courses/edit.html',{'form':course_form})
+        return render_to_response('courses/edit.html',{'form':course_form,'user':users.get_current_user()})
     
 @login_required
 def new(request):
     course_form=CourseForm()
-    return render_to_response('courses/new.html',{'form':course_form})
+    return render_to_response('courses/new.html',{'form':course_form,'user':users.get_current_user()})
 
 @login_required    
 def create(request):
@@ -89,7 +90,7 @@ def create(request):
         course=course_form.save()
         return HttpResponseRedirect(reverse('course_path',args=[course.key().id()]))
     else:
-        return render_to_response('courses/new.html',{'form':course_form})
+        return render_to_response('courses/new.html',{'form':course_form,'user':users.get_current_user()})
     
 @login_required    
 def destroy(request,course_id):
@@ -105,7 +106,7 @@ def content(request,course_id):
     course=Course.get_by_id(cid)
     if request.method == 'GET':
         form=EditContentForm({'content':course.content})
-        return render_to_response('courses/content.html',{'form':form,'path':request.path})
+        return render_to_response('courses/content.html',{'form':form,'course':course,'path':request.path,'user':users.get_current_user()})
     elif request.method == 'POST':
         form=EditContentForm(request.POST)
         if form.is_valid():
@@ -129,7 +130,7 @@ def content(request,course_id):
             #logging.info("aaaaaaaaaaaaaaaaaa"+str(l))
             header_size_binary_str=pack('!h',len(course_header.encode('utf-8')))
             content_str=header_size_binary_str+course_header.encode('utf-8')+text_content.encode('utf-8')
-            course.content=text_content.encode('utf-8')
+            course.content=text_content
             course.content_blob=db.Blob(content_str)
             course.content_count=len(lines)
             if len(lines)>10:

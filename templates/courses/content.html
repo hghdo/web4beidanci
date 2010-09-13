@@ -1,8 +1,14 @@
 {% extends 'main.html' %}
 {% block content %}
-<div class="box">Edit Course Content</div>
+<div class="box">
+<h2>Edit Course Content</h2>
+<p>Note: each word must in one line</p>
+</div>
 <form action="{{ path }}" method="post">
 <p>{{ form.content }}</p>
-<p><input type="submit" value="OK"></input></p>
+<p>
+<input type="submit" value="OK"></input>
+<a href="{% url course_path course.key.id %}">cancel</a>
+</p>
 </form>
 {% endblock %}
