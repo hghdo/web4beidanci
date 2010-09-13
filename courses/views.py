@@ -46,6 +46,8 @@ def list(request):
 def course_file(request,course_key):
     key=Key(encoded=course_key)
     course=Course.get(key)
+    course.downtimes=course.downtimes+1
+    course.put()
     response = HttpResponse(mimetype='text')
     response['Content-Disposition'] = 'attachment; filename='+course_key+'.cou'
     response.write(course.content_blob)
@@ -55,7 +57,7 @@ def course_file(request,course_key):
 def show(request,course_id):
     cid=int(course_id)
     course=Course.get_by_id(cid)
-    return render_to_response('courses/show.html',{'course':course})
+    return render_to_response('courses/show.html',{'course':course,'currentuser':users.get_current_user()})
     
 @login_required    
 def edit(request,course_id):
@@ -85,13 +87,16 @@ def create(request):
     course_form=CourseForm(request.POST)
     if course_form.is_valid():
         course=course_form.save()
-        return HttpResponseRedirect(reverse('courses.views.index'))
+        return HttpResponseRedirect(reverse('course_path',args=[course.key().id()]))
     else:
         return render_to_response('courses/new.html',{'form':course_form})
     
 @login_required    
 def destroy(request,course_id):
-    return
+    cid=int(course_id)
+    course=Course.get_by_id(cid)
+    db.delete(course)
+    return HttpResponseRedirect(reverse('courses.views.index'))
 
 
 @login_required    
@@ -105,6 +110,12 @@ def content(request,course_id):
         form=EditContentForm(request.POST)
         if form.is_valid():
             text_content=form.cleaned_data['content']
+            #text_content=text_content.encode('utf-8')
+            logging.info("content length =>"+str(len(text_content)))
+            bb=text_content.replace('\r\n','$')
+            text_content=bb.replace('$','\n')
+            logging.info("content length after replace =>"+str(len(bb)))
+            logging.info(bb)
             lines=text_content.strip().splitlines()
             # create course header
             course_header="title:%s\n" % course.title
@@ -115,15 +126,14 @@ def content(request,course_id):
             course_header+="type:%s\n" % 'simple'
             course_header+="content_count:%s\n" % len(lines)
             course_header+="separator:10\n"
-            l=len(course_header.encode('utf-8'))
-            logging.info("aaaaaaaaaaaaaaaaaa"+str(l))
+            #logging.info("aaaaaaaaaaaaaaaaaa"+str(l))
             header_size_binary_str=pack('!h',len(course_header.encode('utf-8')))
             content_str=header_size_binary_str+course_header.encode('utf-8')+text_content.encode('utf-8')
-            course.content=text_content
+            course.content=text_content.encode('utf-8')
             course.content_blob=db.Blob(content_str)
             course.content_count=len(lines)
             if len(lines)>10:
                 course.ready=True
-            logging.info(course.content)
+            #logging.info(course.content)
             course.put()
             return HttpResponseRedirect(reverse('course_path',args=[cid]))

@@ -1,5 +1,14 @@
 {% extends 'main.html' %}
 {% block content %}
+<div class="hide">
+  <script type="text/javascript">
+  function delCourse(){
+	  document.getElementById('del_course_form').submit();
+  }
+  </script>  
+  <form action="{% url delete_course_path course.key.id %}" method="post" id="del_course_form">
+  </form>
+</div>
 <div class="box nav">
   <h2><a href="/">Course List</a>&nbsp;&raquo;&nbsp;{{ course.title }}</h2>
 </div>
@@ -13,13 +22,15 @@
     <li><b>language:</b>&nbsp;{{ course.language }}</li>
     <li><b>region:</b>&nbsp;{{ course.region }}</li>
     <li><b>content count:</b>&nbsp;{{ course.content_count }} words</li>
-    <li><b>rating:</b>&nbsp;{{ course.rating }}<!-- <img alt="stars" src="/images/small_stars_detail_3.gif"/>--></li>
+    <li><b>down times:</b>&nbsp;{{ course.downtimes }}<!-- <img alt="stars" src="/images/small_stars_detail_3.gif"/>--></li>
     <li><b>creator:</b>&nbsp;{{ course.creator.nickname }}</li>
+    {% ifequal course.creator currentuser %}
     <li>
       <a href="{% url edit_course_path course.key.id %}">edit</a>&nbsp;|&nbsp;
       <a href="{% url edit_content_path course.key.id %}">manager content</a>&nbsp;|&nbsp;
-      <a href="{% url delete_course_path course.key.id %}">delete</a>
+      <a href="javascript:delCourse();">delete</a>
     </li>
+    {% endifequal %}
     <!--  
     <li>
       <%= link_to 'add content',add_course_path(@course) %>&nbsp;|&nbsp;

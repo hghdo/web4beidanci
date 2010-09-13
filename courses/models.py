@@ -11,6 +11,7 @@ class Course(BaseModel):
     level_code      = db.StringProperty(required=True)
     type_code       = db.StringProperty(required=True)
     rating          = db.RatingProperty(default=1)
+    downtimes       = db.IntegerProperty(default=0)
     ready           = db.BooleanProperty()
     creator         = db.UserProperty(auto_current_user_add=True,required=True)
     created_at      = db.DateTimeProperty(auto_now_add=True,required=True)

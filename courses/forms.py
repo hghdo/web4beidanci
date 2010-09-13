@@ -19,7 +19,7 @@ class CourseForm(djangoforms.ModelForm):
     type_code=forms.CharField(widget=forms.Select(choices=COURSE_TYPE))
     class Meta:
         model=models.Course
-        exclude = ('content_blob','content','ready','content_count','rating')
+        exclude = ('content_blob','content','ready','content_count','rating','downtimes')
         
 class ContentForm(djangoforms.ModelForm):
     class Meta:
