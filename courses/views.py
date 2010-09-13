@@ -126,5 +126,4 @@ def content(request,course_id):
                 course.ready=True
             logging.info(course.content)
             course.put()
-            return HttpResponseRedirect(reverse('edit_content_path',args=[cid]))
-        
+            return HttpResponseRedirect(reverse('course_path',args=[cid]))
