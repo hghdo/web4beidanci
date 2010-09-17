@@ -17,6 +17,9 @@
 	<li class=""><a href="/courses/?style=rec">Last uploaded</a></li>
 	<li class="selected">Created by yourself</li>
 	{% endifequal  %}
+	{% if admin %}
+	<li class=""><a href="/courses/?style=admin">Admin</a></li>
+	{% endif %}
 </ul>
 <ul class="course-list">
 {% for course in courses %}

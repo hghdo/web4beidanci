@@ -24,13 +24,13 @@
     <li><b>content count:</b>&nbsp;{{ course.content_count }} words</li>
     <li><b>down times:</b>&nbsp;{{ course.downtimes }}<!-- <img alt="stars" src="/images/small_stars_detail_3.gif"/>--></li>
     <li><b>creator:</b>&nbsp;{{ course.creator.nickname }}</li>
-    {% ifequal course.creator user %}
+    {% if editable %}
     <li>
       <a href="{% url edit_course_path course.key.id %}">edit</a>&nbsp;|&nbsp;
       <a href="{% url edit_content_path course.key.id %}">manager content</a>&nbsp;|&nbsp;
       <a href="javascript:delCourse();">delete</a>
     </li>
-    {% endifequal %}
+    {% endif %}
     <!--  
     <li>
       <%= link_to 'add content',add_course_path(@course) %>&nbsp;|&nbsp;

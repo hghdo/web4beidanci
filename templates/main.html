@@ -11,7 +11,7 @@
         <h1 id="title"><a href="/">Love Vocabulary</a></h1>
         <p>
           Let's start learning language from study vocabulary. 
-          Below are courses you can study! 
+          Below are courses you can study! <br/>
           {% if user %}
             Hello {{ user.nickname }}! You can <a href="/courses/new">create</a> or <a href="/courses/?style=self">manage</a> your course.
             <a href="{% auth_logout_url %}">Logout from here.</a>
