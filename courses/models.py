@@ -42,7 +42,7 @@ class Course(BaseModel):
         tag.appendChild(text)
         c_tag.appendChild(tag)
         tag = doc.createElement('summary')
-        text = doc.createTextNode(self.summary)
+        text = doc.createTextNode(str(self.summary).encode('utf-8'))
         tag.appendChild(text)
         c_tag.appendChild(tag)
         tag = doc.createElement('language')

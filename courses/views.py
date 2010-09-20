@@ -45,8 +45,9 @@ def list(request):
     q=Course.objects.all()
     q.filter("content_count >",10)
     list=q.fetch(10)
+    logging.info("BBBBBBBBBBBBBBBBBBBBBBB"+request.get_host())
     for course in list:
-        course.xml(doc,path_prefix=request.get_host())
+        course.xml(doc,path_prefix=str(request.get_host()))
     #data=serializers.serialize("xml",Course.objects.all(),fields=('title','summary'))
     data=doc.toxml('utf-8')
     return HttpResponse(data, mimetype="text/xml")
@@ -129,6 +130,7 @@ def content(request,course_id):
             course.content_count=len(lines)
             # create course header
             course_header="title:%s\n" % course.title
+            course_header+="key:%s\n" % str(course.key())
             course_header+="language:%s\n" % course.lang_code
             course_header+="region:%s\n" % course.region_code
             course_header+="level:%s\n" % 'fundamental'
