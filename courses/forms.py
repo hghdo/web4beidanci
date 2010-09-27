@@ -3,7 +3,7 @@ from google.appengine.ext.db import djangoforms
 from courses import models
 from django import forms
 
-LANG_CODES=[('en' , 'english'),('zh_CN' , 'CHINESE_SIMPLIFIED'),('zh_TW' , 'CHINESE_TRADITIONAL'),('de' , 'German'),('fr' , 'France')]
+LANG_CODES=[('en' , 'English'),('zh_CN' , 'CHINESE_SIMPLIFIED'),('zh_TW' , 'CHINESE_TRADITIONAL'),('de' , 'German'),('fr' , 'France')]
 REGIONS =[('cn','中国'),('tw','中国台湾'),('hk','中国香港'),('all','All')]
 LEVEL =[('fund','fundamental'),('midd','middle'),('adva','advanced')]
 COURSE_TYPE =[('simp','simple'),('self','self-dictionary'),('nodi','no-dictionary')]
@@ -19,7 +19,7 @@ class CourseForm(djangoforms.ModelForm):
     type_code=forms.CharField(widget=forms.Select(choices=COURSE_TYPE))
     class Meta:
         model=models.Course
-        exclude = ('content_blob','content','ready','content_count','rating','downtimes','md5')
+        exclude = ('content_blob','content','ready','content_count','rating','downtimes','md5_digest','updated_at')
         
 class ContentForm(djangoforms.ModelForm):
     class Meta:
