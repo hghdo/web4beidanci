@@ -14,10 +14,12 @@ from google.appengine.ext import db
 from google.appengine.ext.db import Key
 from google.appengine.api import users
 from google.appengine.ext.db import GqlQuery
+import md5
 
 
 def index(request):
     user = users.get_current_user()
+    admin = users.is_current_user_admin()
 #    query = db.GqlQuery("SELECT * FROM Course WHERE content_count > :1 OR creator = :2 ",
 #                    10, users.get_current_user())
     style = request.GET.get('style') or 'pop'
@@ -28,9 +30,14 @@ def index(request):
     elif style=='rec':
         query = GqlQuery("SELECT * FROM Course WHERE ready = :1 ORDER BY created_at DESC",True)
         #q=Course.objects.all().filter("content_count >",10).order('-created_at')
-    else:
+    elif style=='self':
         query = Course.all().filter("creator =",users.get_current_user())
-    return render_to_response('courses/index.html',{'courses':query.fetch(10),'style':style,'user':user})
+    elif style=='admin' and admin:
+        query = Course.all()
+    else:
+        query = GqlQuery("SELECT * FROM Course WHERE ready = :1 ORDER BY rating",True)
+        style="pop"
+    return render_to_response('courses/index.html',{'courses':query.fetch(10),'style':style,'user':user,'admin':admin})
 
 def list(request):
     impl = getDOMImplementation()
@@ -38,8 +45,9 @@ def list(request):
     q=Course.objects.all()
     q.filter("content_count >",10)
     list=q.fetch(10)
+    logging.info("BBBBBBBBBBBBBBBBBBBBBBB"+request.get_host())
     for course in list:
-        course.xml(doc,path_prefix=request.get_host())
+        course.xml(doc,path_prefix=str(request.get_host()))
     #data=serializers.serialize("xml",Course.objects.all(),fields=('title','summary'))
     data=doc.toxml('utf-8')
     return HttpResponse(data, mimetype="text/xml")
@@ -58,7 +66,8 @@ def course_file(request,course_key):
 def show(request,course_id):
     cid=int(course_id)
     course=Course.get_by_id(cid)
-    return render_to_response('courses/show.html',{'course':course,'user':users.get_current_user()})
+    editable=(course==users.get_current_user() or users.is_current_user_admin())
+    return render_to_response('courses/show.html',{'course':course,'editable':editable})
     
 @login_required    
 def edit(request,course_id):
@@ -96,8 +105,10 @@ def create(request):
 def destroy(request,course_id):
     cid=int(course_id)
     course=Course.get_by_id(cid)
-    db.delete(course)
+    if course.creator==users.get_current_user() or users.is_current_user_admin():
+        db.delete(course)
     return HttpResponseRedirect(reverse('courses.views.index'))
+
 
 
 @login_required    
@@ -112,14 +123,14 @@ def content(request,course_id):
         if form.is_valid():
             text_content=form.cleaned_data['content']
             #text_content=text_content.encode('utf-8')
-            logging.info("content length =>"+str(len(text_content)))
             bb=text_content.replace('\r\n','$')
             text_content=bb.replace('$','\n')
-            logging.info("content length after replace =>"+str(len(bb)))
-            logging.info(bb)
+            course.content=text_content
             lines=text_content.strip().splitlines()
+            course.content_count=len(lines)
             # create course header
             course_header="title:%s\n" % course.title
+            course_header+="key:%s\n" % str(course.key())
             course_header+="language:%s\n" % course.lang_code
             course_header+="region:%s\n" % course.region_code
             course_header+="level:%s\n" % 'fundamental'
@@ -127,14 +138,14 @@ def content(request,course_id):
             course_header+="type:%s\n" % 'simple'
             course_header+="content_count:%s\n" % len(lines)
             course_header+="separator:10\n"
-            #logging.info("aaaaaaaaaaaaaaaaaa"+str(l))
             header_size_binary_str=pack('!h',len(course_header.encode('utf-8')))
             content_str=header_size_binary_str+course_header.encode('utf-8')+text_content.encode('utf-8')
-            course.content=text_content
             course.content_blob=db.Blob(content_str)
-            course.content_count=len(lines)
+            new_md5=md5.new(content_str).hexdigest()
             if len(lines)>10:
                 course.ready=True
             #logging.info(course.content)
-            course.put()
+            if new_md5!=course.md5_digest:
+                course.md5_digest=new_md5
+                course.put()
             return HttpResponseRedirect(reverse('course_path',args=[cid]))
