@@ -5,11 +5,11 @@ import logging
 
 class Course(BaseModel):
     title           = db.StringProperty(required=True)
-    summary         = db.TextProperty(default='')
     lang_code       = db.StringProperty(required=True)
     region_code     = db.StringProperty(required=True)
     level_code      = db.StringProperty(required=True)
     type_code       = db.StringProperty(required=True)
+    summary         = db.TextProperty(default='')
     rating          = db.RatingProperty(default=1)
     downtimes       = db.IntegerProperty(default=0)
     ready           = db.BooleanProperty()
